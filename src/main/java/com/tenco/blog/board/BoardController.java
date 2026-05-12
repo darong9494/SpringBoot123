@@ -11,7 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -26,6 +26,7 @@ public class BoardController {
 
     /**
      * 게시글 작성 화면 요청
+     *
      * @return 페이지 반환
      * 주소설계 : http://localhost:8080/board/save-form
      */
@@ -36,6 +37,7 @@ public class BoardController {
 
     /**
      * 게시글 작성 기능 요청
+     *
      * @return 페이지 반환
      * 주소설계 : http://localhost:8080/board/save-form
      */
@@ -52,15 +54,28 @@ public class BoardController {
      * 게시글 목록 화면 요청
      * 주소설계 : http://localhost:8080/
      */
-    @GetMapping({"/", "index"})
-    public String list(Model model) {
-        List<BoardResponse.ListDTO> boardList = boardService.게시글목록();
-        // OSIV 개념을 false 설정했기 때문에 여기서 LAZY 요청을 하면 터져 버린다.
-        ///boardList.get(0).getUser().getUsername();
+    // 페이징 처리 주소설계 : http://localhost:8080/?page=1&size=2
+    // 페이징 처리 주소설계 : http://localhost:8080/ << defaultValue로 동작
+    // @RequestParam(name = "page") 필수값 처리해줘야함
+    @GetMapping({"/board/list", "/"})
+    public String list(Model model,
+                       @RequestParam(name = "page", defaultValue = "1") Integer page,
+                       @RequestParam(name = "size", defaultValue = "5") Integer size) {
 
-        model.addAttribute("boardList", boardList);
+        BoardResponse.PageDTO boardPage = boardService.게시글목록(page, size);
+        model.addAttribute("boardPage", boardPage);
         return "board/list";
     }
+
+//    @GetMapping({"/", "index"})
+//    public String list(Model model) {
+//        List<BoardResponse.ListDTO> boardList = boardService.게시글목록();
+//        // OSIV 개념을 false 설정했기 때문에 여기서 LAZY 요청을 하면 터져 버린다.
+//        ///boardList.get(0).getUser().getUsername();
+//
+//        model.addAttribute("boardList", boardList);
+//        return "board/list";
+//    }
 
     // 게시글 상세보기 화면 요청
     // http://localhost:8080/board/1
@@ -96,17 +111,17 @@ public class BoardController {
     // 게시글 수정 화면 요청
     @GetMapping("/board/{id}/update-form")
     public String updateFormPage(@PathVariable(name = "id") Integer id, Model model, HttpSession session) {
-       User sessionUser = (User) session.getAttribute("sessionUser");
-       BoardResponse.DetailDTO detailDTO = boardService.게시글상세화면및인가처리(id, sessionUser);
-       model.addAttribute("board", detailDTO);
-       return "board/update-form";
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        BoardResponse.DetailDTO detailDTO = boardService.게시글상세화면및인가처리(id, sessionUser);
+        model.addAttribute("board", detailDTO);
+        return "board/update-form";
     }
 
 
     @PostMapping("/board/{id}/update")
     public String updateProc(@PathVariable(name = "id") Integer id,
                              BoardRequest.UpdateDTO updateDTO, HttpSession session) {
-        User sessionUser =  (User) session.getAttribute("sessionUser");
+        User sessionUser = (User) session.getAttribute("sessionUser");
         updateDTO.validate();
         boardService.게시글수정(id, updateDTO, sessionUser);
         return "redirect:/board/" + id;

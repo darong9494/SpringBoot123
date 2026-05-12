@@ -3,15 +3,17 @@ package com.tenco.blog.board;
 import com.tenco.blog._core.errors.Exception403;
 import com.tenco.blog._core.errors.Exception404;
 import com.tenco.blog.reply.ReplyRepository;
-import com.tenco.blog.reply.ReplyResponse;
 import com.tenco.blog.user.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -39,22 +41,54 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final ReplyRepository replyRepository;
+//    /**
+//     * 게시글 목록 조회
+//     * OSIV false 환경 대응 - 응답 DTO 설계
+//     */
+//    public List<BoardResponse.ListDTO> 게시글목록() {
+//        log.info("게시글 목록 조회 서비스");
+//        List<Board> boardList = boardRepository.findAllJoinUser();
+//        boardList.get(0).getUser(); // LAZY 로딩 --> 한 번더 쿼리 던짐
+//        log.info("게시글 목록 조회 완료 - 총 : {}", boardList.size());
+//        return boardList.stream()
+//                .map(BoardResponse.ListDTO::new) // map 닫기
+//                .collect(Collectors.toList());
+//    }
+
     /**
      * 게시글 목록 조회
      * OSIV false 환경 대응 - 응답 DTO 설계
      */
-    public List<BoardResponse.ListDTO> 게시글목록() {
-        log.info("게시글 목록 조회 서비스");
-        List<Board> boardList = boardRepository.findAllJoinUser();
-        boardList.get(0).getUser(); // LAZY 로딩 --> 한 번더 쿼리 던짐
-        log.info("게시글 목록 조회 완료 - 총 : {}", boardList.size());
-        return boardList.stream()
-                .map(BoardResponse.ListDTO::new) // map 닫기
-                .collect(Collectors.toList());
+    public BoardResponse.PageDTO 게시글목록(int page, int size) {
+        // 화면 기준에서 넘어오는 값 (사용자에게 보여지는 기능) 0이 아니라 1부터 시작
+        // 반면 Spring Data JPA기준으로 offset 0번부터 시작이다.
+        // 사용자가 일부러 음수값을 넣더라도 기본값 0으로 셋팅될 수 있도록 방어적 코드 작성 필수
+        int pageIndex = Math.max(0, page - 1);
+        // 사용자가 임의로 많은 값을 던지는 것 방지
+        int validSize = Math.max(1, Math.min(50, size));
+
+        // Pageable 이란?
+        // 어떤 페이지를 (pageIndex), 몇개씩(validSize), 어떤 정렬 (sort) 가져올지를
+        // 한 묶음으로 표현하는 Spring Data 표준 페이징 인터페이스다.
+        // 즉 Repository에 Pageable 객체를 넘기면 자동으로 limit, offset 만들어준다.
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(pageIndex, validSize, sort);
+
+        // Page<T> 이란?
+        // 조회된 데이터 한 페이지와 페이징 관련된 메타 데이터를 한꺼번에 담아주는 객체이다.
+        // - getContent() : 현재 페이지의 데이터 목록
+        // - getNumbers() : 현재 페이지 번호 (0번부터 시작함)
+        // - getTotalElements() : 전체 항목 수를 나타냄
+        // - getTotalPage() : 전체 페이지 수 반환
+        // - isFirst() / isLast() : 첫 페이지/ 마지막 페이지 여부 boolean() 값이다.
+        Page<Board> boardPage = boardRepository.findAllWithUserOrderByCreatedAtDesc(pageable);
+        // DTO 변환해서 컨트롤러로 내려줌 (OSIV 대응)
+        return new BoardResponse.PageDTO(boardPage);
     }
 
     /**
      * 게시글 상세 조회
+     *
      * @param id (Board PK)
      * @return DetailDTO 처리 (OSIV 대응)
      */
@@ -74,6 +108,7 @@ public class BoardService {
 
     /**
      * 게시글 작성
+     *
      * @param saveDTO
      * @param sessionUser (세션에서 가져온 사용자 정보)
      */
@@ -97,7 +132,7 @@ public class BoardService {
     public BoardResponse.DetailDTO 게시글상세화면및인가처리(Integer id, User sessionUser) {
         log.info("게시글 상세 화면 및 인가 확인");
         BoardResponse.DetailDTO detailDTO = 게시글상세조회(id);
-        if(!detailDTO.getUserId().equals(sessionUser.getId())) {
+        if (!detailDTO.getUserId().equals(sessionUser.getId())) {
             throw new Exception403("권한없음");
         }
         log.info("게시글 수정 조회 완료 - 제목: {}, 작성자: {}",
@@ -108,7 +143,8 @@ public class BoardService {
 
     /**
      * 게시글 수정 기능 처리
-     * @param id  (Board PK)
+     *
+     * @param id          (Board PK)
      * @param updateDTO
      * @param sessionUser
      * @return
@@ -128,7 +164,8 @@ public class BoardService {
 
     /**
      * 게시글 삭제 요청
-     * @param id (Board PK)
+     *
+     * @param id          (Board PK)
      * @param sessionUser
      */
     @Transactional

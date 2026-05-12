@@ -1,5 +1,7 @@
 package com.tenco.blog.board;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,16 +27,24 @@ public interface BoardRepository extends JpaRepository<Board, Integer> {
     // 단건 조회
     // 1. 게시글 ID로 조회시 사용자 정보도 함께 가져오기
     @Query("""
-            SELECT b FROM Board b JOIN FETCH b.user WHERE b.id = :id
-           """)
+             SELECT b FROM Board b JOIN FETCH b.user WHERE b.id = :id
+            """)
     Optional<Board> findByIdJoinUser(@Param("id") Integer id);
 
     // 2. 전체 게시글 조회 (단 한번에 작성자 정보도 조회)
     @Query("""
-    SELECT b FROM Board b JOIN FETCH b.user ORDER BY b.id DESC
-    """)
+            SELECT b FROM Board b JOIN FETCH b.user ORDER BY b.id DESC
+            """)
     List<Board> findAllJoinUser();
 
     // 3. 데이터 수정은 더티 체킹으로 처리
-}
 
+    // 4. 전체 게시글 조회 + 페이징 처리
+    @Query(value = """
+                    select distinct b from Board b join fetch b.user order by b.createdAt desc
+            """,
+            countQuery = """
+                    select count(distinct b) from Board b
+                    """)
+    Page<Board> findAllWithUserOrderByCreatedAtDesc(Pageable pageable);
+}

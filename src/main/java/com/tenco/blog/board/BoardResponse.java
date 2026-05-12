@@ -1,10 +1,8 @@
 package com.tenco.blog.board;
 
-import com.tenco.blog.user.User;
 import com.tenco.blog.util.MyDateUtil;
 import lombok.Data;
 import org.springframework.data.domain.Page;
-
 import java.util.ArrayList;
 import java.util.List;
 

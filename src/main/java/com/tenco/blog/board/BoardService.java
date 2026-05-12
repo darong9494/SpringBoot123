@@ -13,8 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 
 /**
  * 서비스 레이어
@@ -59,7 +57,7 @@ public class BoardService {
      * 게시글 목록 조회
      * OSIV false 환경 대응 - 응답 DTO 설계
      */
-    public BoardResponse.PageDTO 게시글목록(int page, int size) {
+    public BoardResponse.PageDTO 게시글목록(int page, int size, String keyword) {
         // 화면 기준에서 넘어오는 값 (사용자에게 보여지는 기능) 0이 아니라 1부터 시작
         // 반면 Spring Data JPA기준으로 offset 0번부터 시작이다.
         // 사용자가 일부러 음수값을 넣더라도 기본값 0으로 셋팅될 수 있도록 방어적 코드 작성 필수
@@ -81,7 +79,12 @@ public class BoardService {
         // - getTotalElements() : 전체 항목 수를 나타냄
         // - getTotalPage() : 전체 페이지 수 반환
         // - isFirst() / isLast() : 첫 페이지/ 마지막 페이지 여부 boolean() 값이다.
-        Page<Board> boardPage = boardRepository.findAllWithUserOrderByCreatedAtDesc(pageable);
+        Page<Board> boardPage;
+        if (keyword == null || keyword.isBlank()) {
+            boardPage = boardRepository.findAllWithUserOrderByCreatedAtDesc(pageable);
+        } else {
+            boardPage = boardRepository.findByTitleContainingOrContentContaining(keyword.trim(), pageable);
+        }
         // DTO 변환해서 컨트롤러로 내려줌 (OSIV 대응)
         return new BoardResponse.PageDTO(boardPage);
     }

@@ -2,11 +2,14 @@ package com.tenco.blog._core.config;
 
 import com.tenco.blog._core.interceptor.LoginInterceptor;
 import com.tenco.blog._core.interceptor.SessionInterceptor;
+import com.tenco.blog._core.util.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Paths;
 
 // 자바 코드로 스프링 부트 설정 파일을 다둘 수 있다.
 
@@ -57,10 +60,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // 사용자에게는 가짜 경로를 보여주고 내부에서는 실정 경로를 찾을 수 있도록 처리하는 기법(보안상)
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String externalPath = Paths.get(FileUtil.IMAGES_DIR).toString();
         registry.addResourceHandler("/images/**")
-                // 추후에 C:\\upload
-                .addResourceLocations("file:///C:/upload/");
+                // file: 추가 하기
+                .addResourceLocations("file:" + externalPath);
     }
 }
-
-

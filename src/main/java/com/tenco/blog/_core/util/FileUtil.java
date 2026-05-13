@@ -1,7 +1,8 @@
-package com.tenco.blog.util;
+package com.tenco.blog._core.util;
 
 import com.tenco.blog._core.errors.Exception400;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +12,11 @@ import java.util.UUID;
 // IoC안함 (파일 기능 처리에만 동작할 수 있도록 static 메소드로 구현할 예정)
 public class FileUtil {
     // 업로드될 파일 경로를 미리 상수로 지정
-    public static final String IMAGES_DIR = "C:\\upload";
+    // System.getProperty("user.home")을 사용해서 OS 상관없이 사용자 홈 경로를 동적으로 설정해서 가져옴
+    // 예) window : C:\Users\사용자명\blog_uploads
+    // 예) Mac : \Users\사용자명\blog_uploads
+    public static final String IMAGES_DIR =
+            Paths.get(System.getProperty("user.home"), "blog_uploads").toString();
 
     // 1. 파일 저장하는 기능
     public static String saveFile(MultipartFile file, String uploadDir) throws IOException {
@@ -52,9 +57,20 @@ public class FileUtil {
     }
 
     // 2. 파일 삭제하는 기능
+    public static void deleteFile(String fileName, String uploadDir) throws IOException {
+        if (fileName == null || fileName.isEmpty()) {
+            return;
+        }
+        // Path >> C://upload/xxx_a.png 라고 담길것이다.
+        Path filePath = Paths.get(uploadDir, fileName);
+        if (Files.exists(filePath)) {
+            // 정확한 폴더 경로 존재 확인, 파일명 기준으로 파일이 존재한다면
+            Files.delete(filePath); // 실제 폴더에서 파일 삭제됨.
+        }
+    }
 
     // 3. 편의 기능 만들 예정 (이미지 파일이 맞는지 확인)
-    public static boolean isImage(MultipartFile file) {
+    public static boolean isImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return false;
         }

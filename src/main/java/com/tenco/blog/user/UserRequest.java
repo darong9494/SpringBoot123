@@ -68,7 +68,7 @@ public class UserRequest {
 
     @Data
     public static class UpdateDTO {
-
+        private MultipartFile profileImage;
         private String password;
 
         public void validate() {

@@ -54,6 +54,7 @@ public class BoardController {
      */
     // 페이징 처리 주소설계 : http://localhost:8080/?page=1&size=2
     // 페이징 처리 주소설계 : http://localhost:8080/ << defaultValue로 동작
+    // 검색 요청시 URL 설계 : http://localhost:8080/board/list?keyword='블로그'&page=1&size=2
     // @RequestParam(name = "page") 필수값 처리해줘야함
     @GetMapping({"/board/list", "/"})
     public String list(Model model,

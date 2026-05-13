@@ -12,7 +12,7 @@ public class ReplyResponse {
     public static class ListDTO {
         private Integer id; // 댓글 pk
         private String comment; // 댓글 내용
-        private Integer userId; // 댓글 작성사 PK
+        private Integer userId; // 댓글 작성자 PK
         private String username; // 댓글 작성자 이름
         private boolean isOwner; // 댓글 소유자 여부 true, false (로그인 사용자 기준)
         private String createdAt; // 댓글 작성 시간

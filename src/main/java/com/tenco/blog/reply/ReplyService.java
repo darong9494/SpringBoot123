@@ -9,8 +9,6 @@ import com.tenco.blog.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.List;
 
 // Service 계층에서는 여러 Repository를 조합해서 비즈니스 규칙을 완성한다

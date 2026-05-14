@@ -2,7 +2,6 @@ package com.tenco.blog._core.util;
 
 import com.tenco.blog._core.errors.Exception400;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,6 +30,7 @@ public class FileUtil {
         Path uploadPath = Paths.get(IMAGES_DIR);
 
         // Files.exists() : 파일 / 디렉토리 존재 여부 확인
+
         if (Files.exists(uploadPath) == false) {
             // 현재 서버 컴퓨터에 images/* 없는상태
             Files.createDirectories(uploadPath); // 상위폴더까지 자동 생성해줌
